@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, 'candidate' | 'recruiter')
+    //   - company: string (optional)
+    //   - avatar: string (optional)
+    //   - skills: list (optional)
+    //   - settings: map (optional)
+    //
+    // Collection: jobs
+    // Document ID: jobId
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (required)
+    //   - company: string (required)
+    //   - location: string (required)
+    //   - salary: string (optional)
+    //   - description: string (optional)
+    //   - requirements: list (optional)
+    //   - responsibilities: list (optional)
+    //   - postedAt: string (required)
+    //   - deadline: string (optional)
+    //   - status: string (required, 'Open' | 'Closed')
+    //
+    // Collection: applications
+    // Document ID: applicationId
+    // Fields:
+    //   - id: string (required)
+    //   - jobId: string (required)
+    //   - candidateId: string (required)
+    //   - candidateName: string (required)
+    //   - candidateEmail: string (required)
+    //   - appliedAt: string (required)
+    //   - status: string (required)
+    //   - feedback: string (optional)
+    //   - feedbackRating: number (optional)
+    //   - aiScore: number (optional)
+    //   - aiReason: string (optional)
+    //   - isSharedWithHM: boolean (optional)
+    //
+    // Collection: chats/{chatId}/messages/{messageId}
+    // Document ID: messageId
+    // Fields:
+    //   - id: string (required)
+    //   - userId: string (required)
+    //   - role: string (required, 'user' | 'model')
+    //   - content: string (required)
+    //   - timestamp: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "vedantbadrakia07@gmail.com") ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin')
+      );
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['id', 'name', 'email', 'role']) &&
+             data.id is string && data.name is string && data.name.size() > 0 &&
+             isValidEmail(data.email) &&
+             data.role in ['candidate', 'recruiter', 'admin'];
+    }
+
+    function isValidJob(data) {
+      return hasRequiredFields(['id', 'title', 'company', 'location', 'status', 'postedAt']) &&
+             data.id is string && data.title is string && data.company is string &&
+             data.location is string && data.status in ['Open', 'Closed'];
+    }
+
+    function isValidApplication(data) {
+      return hasRequiredFields(['id', 'jobId', 'candidateId', 'status', 'appliedAt']) &&
+             data.id is string && data.jobId is string && data.candidateId is string &&
+             data.status is string;
+    }
+
+    function isValidChatMessage(data) {
+      return hasRequiredFields(['id', 'userId', 'role', 'content', 'timestamp']) &&
+             data.id is string && data.userId is string && data.role in ['user', 'model'] &&
+             data.content is string && data.timestamp is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role != 'admin' || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /jobs/{jobId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidJob(request.resource.data) && (hasRole('recruiter') || isAdmin());
+      allow update: if isAuthenticated() && isValidJob(request.resource.data) && (hasRole('recruiter') || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow read: if isAuthenticated() && (
+        isOwner(resource.data.candidateId) || 
+        hasRole('recruiter') || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && isValidApplication(request.resource.data) && isOwner(request.resource.data.candidateId);
+      allow update: if isAuthenticated() && isValidApplication(request.resource.data) && (
+        isOwner(resource.data.candidateId) || 
+        hasRole('recruiter') || 
+        isAdmin()
+      );
+    }
+
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated() && (chatId == request.auth.uid || isAdmin());
+      
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (chatId == request.auth.uid || isAdmin());
+        allow create: if isAuthenticated() && (chatId == request.auth.uid || isAdmin()) && isValidChatMessage(request.resource.data);
+      }
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

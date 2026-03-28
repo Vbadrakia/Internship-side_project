@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, UploadCloud, FileText, CheckCircle2 } from 'lucide-react';
+import { X, UploadCloud, FileText, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface ApplyJobModalProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface ApplyJobModalProps {
 export const ApplyJobModal: React.FC<ApplyJobModalProps> = ({ isOpen, onClose, onSubmit, jobTitle, companyName }) => {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parsedData, setParsedData] = useState<{ skills: string[], summary: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -43,10 +45,25 @@ export const ApplyJobModal: React.FC<ApplyJobModalProps> = ({ isOpen, onClose, o
     }
   };
 
-  const validateAndSetFile = (selectedFile: File) => {
+  const validateAndSetFile = async (selectedFile: File) => {
     const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (validTypes.includes(selectedFile.type)) {
       setFile(selectedFile);
+      
+      // Simulate AI Parsing
+      setIsParsing(true);
+      try {
+        const { parseResume } = await import('../services/geminiService');
+        // In a real app, we'd extract text from the file first.
+        // Here we simulate with a mock text based on the file name or just generic.
+        const mockText = "Experience in React, TypeScript, and Node.js. Built several scalable web applications.";
+        const result = await parseResume(mockText);
+        setParsedData(result);
+      } catch (error) {
+        console.error("Error parsing resume:", error);
+      } finally {
+        setIsParsing(false);
+      }
     } else {
       alert("Please upload a PDF or DOCX file.");
     }
@@ -57,6 +74,7 @@ export const ApplyJobModal: React.FC<ApplyJobModalProps> = ({ isOpen, onClose, o
     if (file) {
       onSubmit(file);
       setFile(null);
+      setParsedData(null);
     }
   };
 
@@ -117,7 +135,7 @@ export const ApplyJobModal: React.FC<ApplyJobModalProps> = ({ isOpen, onClose, o
                   <p className="text-xs text-gray-500 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   <button 
                     type="button" 
-                    onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                    onClick={(e) => { e.stopPropagation(); setFile(null); setParsedData(null); }}
                     className="text-xs text-red-500 hover:underline mt-2 font-medium"
                   >
                     Remove file
@@ -126,6 +144,30 @@ export const ApplyJobModal: React.FC<ApplyJobModalProps> = ({ isOpen, onClose, o
               )}
             </div>
           </div>
+
+          {isParsing && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 animate-pulse">
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">AI Parsing Resume...</p>
+              </div>
+          )}
+
+          {parsedData && !isParsing && (
+              <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl animate-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={14} className="text-blue-600" />
+                      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">AI Extracted Profile</span>
+                  </div>
+                  <p className="text-xs text-gray-700 font-medium mb-3 leading-relaxed">"{parsedData.summary}"</p>
+                  <div className="flex flex-wrap gap-1.5">
+                      {parsedData.skills.map(skill => (
+                          <span key={skill} className="text-[9px] bg-white text-blue-600 px-2 py-0.5 rounded border border-blue-100 font-bold">
+                              {skill}
+                          </span>
+                      ))}
+                  </div>
+              </div>
+          )}
 
           <div className="flex gap-3 justify-end">
             <button 

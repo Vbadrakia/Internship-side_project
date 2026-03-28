@@ -9,6 +9,10 @@ export interface User {
   avatar?: string;
   skills?: string[];
   subscription?: RecruiterSubscription;
+  settings?: {
+    darkMode?: boolean;
+    blindHiring?: boolean;
+  };
 }
 
 export interface RecruiterSubscription {
@@ -43,6 +47,7 @@ export interface Job {
   responsibilities: string[];
   postedAt: string;
   deadline?: string;
+  status: 'Open' | 'Closed';
 }
 
 export interface Application {
@@ -55,12 +60,18 @@ export interface Application {
   lastStatusUpdateAt?: string;
   status: ApplicationStatus;
   feedback?: string;
+  feedbackRating?: number; // 1-5 rating from candidate
   resumeLink?: string;
+  resumeSummary?: string;
   skills: string[];
   interviewDate?: string;
   interviewTime?: string;
   aiScore?: number;
   aiReason?: string;
+  queuePosition?: number;
+  totalApplicants?: number;
+  isSharedWithHM?: boolean;
+  hmFeedback?: 'approved' | 'rejected' | null;
 }
 
 export interface SourcingAgent {
@@ -105,6 +116,7 @@ export interface ReputationStats {
   avgResponseTimeDays: number;
   totalApplications: number;
   totalResponded: number;
+  feedbackQualityScore: number; // 0-5
   tier: 'Elite' | 'Consistent' | 'Responsive' | 'New';
 }
 

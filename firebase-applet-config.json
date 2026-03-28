@@ -1,0 +1,10 @@
+{
+  "projectId": "biuld-youtube-summarize",
+  "appId": "1:259178446623:web:f7af2287a17a55316a3a2a",
+  "apiKey": "AIzaSyALYGUHa21h3pJJNn3E7DY6iFJOqT4vrKw",
+  "authDomain": "biuld--summarize.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-85b6f45f-8957-4768-bced-ca17054b3a19",
+  "storageBucket": "biuld-youtube-summarize.firebasestorage.app",
+  "messagingSenderId": "259178446623",
+  "measurementId": ""
+}

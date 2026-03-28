@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, MapPin, DollarSign, Building, Calendar, Clock } from 'lucide-react';
+import { X, Plus, Trash2, MapPin, DollarSign, Building, Calendar, Clock, Sparkles } from 'lucide-react';
 import { Job } from '../types';
+import { generateJobDescription } from '../services/geminiService';
 
 interface CreateJobModalProps {
   isOpen: boolean;
@@ -18,8 +19,29 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({ isOpen, onClose,
   const [responsibilities, setResponsibilities] = useState<string[]>(['']);
   const [deadline, setDeadline] = useState('');
   const [postedAt, setPostedAt] = useState(new Date().toISOString().split('T')[0]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleAIGenerate = async () => {
+    if (!title || !company) {
+      alert("Please enter Job Title and Company first to generate details.");
+      return;
+    }
+    
+    setIsGenerating(true);
+    try {
+      const data = await generateJobDescription(title, company, location || 'Remote');
+      setDescription(data.description);
+      setRequirements(data.requirements.length > 0 ? data.requirements : ['']);
+      setResponsibilities(data.responsibilities.length > 0 ? data.responsibilities : ['']);
+    } catch (error) {
+      console.error("Error generating JD:", error);
+      alert("Failed to generate job description. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // Requirement Handlers
   const handleAddRequirement = () => {
@@ -88,7 +110,22 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({ isOpen, onClose,
      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
-           <h3 className="font-semibold text-gray-900">Post a New Job</h3>
+           <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900">Post a New Job</h3>
+              <button 
+                type="button"
+                onClick={handleAIGenerate}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-amber-100 transition-colors disabled:opacity-50"
+              >
+                {isGenerating ? (
+                  <div className="w-3 h-3 border-2 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Sparkles size={12} />
+                )}
+                {isGenerating ? 'Generating...' : 'AI Generate JD'}
+              </button>
+           </div>
            <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
         

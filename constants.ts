@@ -69,7 +69,8 @@ export const MOCK_JOBS: Job[] = [
       'Mentor junior developers and conduct code reviews'
     ],
     postedAt: '2 days ago',
-    deadline: '2024-12-31'
+    deadline: '2024-12-31',
+    status: 'Open'
   },
   {
     id: 'j2',
@@ -85,7 +86,8 @@ export const MOCK_JOBS: Job[] = [
       'Work closely with engineering to ensure design feasibility'
     ],
     postedAt: '1 week ago',
-    deadline: '2024-11-15'
+    deadline: '2024-11-15',
+    status: 'Open'
   },
   {
     id: 'j3',
@@ -100,7 +102,32 @@ export const MOCK_JOBS: Job[] = [
       'Optimize database queries and ensure system reliability',
       'Maintain CI/CD pipelines'
     ],
-    postedAt: '3 days ago'
+    postedAt: '3 days ago',
+    status: 'Closed'
+  },
+  {
+    id: 'j4',
+    title: 'Frontend Developer',
+    company: 'TechFlow Solutions',
+    location: 'New York, NY',
+    salary: '$120k - $150k',
+    description: 'Join our NYC team to build amazing web experiences.',
+    requirements: ['React', 'CSS', 'JavaScript'],
+    responsibilities: ['Develop new features', 'Fix bugs', 'Collaborate with team'],
+    postedAt: '5 days ago',
+    status: 'Open'
+  },
+  {
+    id: 'j5',
+    title: 'DevOps Engineer',
+    company: 'TechFlow Solutions',
+    location: 'Remote',
+    salary: '$150k - $190k',
+    description: 'Scale our infrastructure and automate everything.',
+    requirements: ['AWS', 'Kubernetes', 'Terraform'],
+    responsibilities: ['Manage cloud infrastructure', 'Improve CI/CD', 'Security audits'],
+    postedAt: '1 day ago',
+    status: 'Open'
   }
 ];
 

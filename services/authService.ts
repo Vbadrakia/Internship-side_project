@@ -7,14 +7,16 @@ const MOCK_USERS: User[] = [
     name: 'Alex Johnson',
     email: 'alex@example.com',
     role: 'candidate',
-    avatar: 'https://ui-avatars.com/api/?name=Alex+Johnson&background=0D8ABC&color=fff'
+    avatar: 'https://ui-avatars.com/api/?name=Alex+Johnson&background=0D8ABC&color=fff',
+    settings: { darkMode: false }
   },
   {
     id: 'c2',
     name: 'Sarah Smith',
     email: 'sarah@example.com',
     role: 'candidate',
-    avatar: 'https://ui-avatars.com/api/?name=Sarah+Smith&background=random'
+    avatar: 'https://ui-avatars.com/api/?name=Sarah+Smith&background=random',
+    settings: { darkMode: false }
   },
   {
     id: 'r1',
@@ -22,7 +24,8 @@ const MOCK_USERS: User[] = [
     email: 'john@techflow.com',
     role: 'recruiter',
     company: 'TechFlow Solutions',
-    avatar: 'https://ui-avatars.com/api/?name=John+Recruiter&background=2563EB&color=fff'
+    avatar: 'https://ui-avatars.com/api/?name=John+Recruiter&background=2563EB&color=fff',
+    settings: { darkMode: false, blindHiring: false }
   }
 ];
 
@@ -52,7 +55,8 @@ export const register = async (name: string, email: string, role: 'candidate' | 
     email,
     role,
     company: role === 'recruiter' ? company : undefined,
-    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+    settings: { darkMode: false, blindHiring: role === 'recruiter' ? false : undefined }
   };
 
   MOCK_USERS.push(newUser);
